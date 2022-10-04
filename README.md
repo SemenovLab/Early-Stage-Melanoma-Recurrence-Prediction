@@ -12,9 +12,10 @@ Code: include all the code for the analysis
 Please contact gwan@mgh.harvard.edu or ysemenov@mgh.harvard.edu in case you have any questions.
 
 ## Cite
-Please cite our paper if you use the code in your own work:
+Please cite our paper if you use the code in your own work:       
+
 '''
-@article{earlymelanomawan,
+@article{earlymelanomawan22,
   title={Prediction of Early-Stage Melanoma Recurrence Using Clinical and Histopathologic Features},
   author={Wan, Guihong
   and Nguyen, Nga
@@ -23,6 +24,7 @@ Please cite our paper if you use the code in your own work:
   and Bonnie W. Leung
   and others},
   journal={NPJ Precision Oncology}
-  yar="2022"
+  year="2022"
 }
 '''
+
