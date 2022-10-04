@@ -5,8 +5,14 @@ by Guihong Wan, Nga Nguyen, Feng Liu, Mia S. DeSimone, Bonnie W. Leung, ..., Pet
 Accepted in principle in NPJ Precision Oncology, 2022.
 
 ## Description
-Data: include an sample data
-Code: include all the code for the analysis
+data: includes an sample dataset.       
+code: includes all the codes for the analyses.   
+code/Melanoma_cohort_v1.0.Rmd for data preprocessing.
+code/ml-analysis-site-binary-classification-v1.0.ipynb: binary recurrence classification tasks.     
+code/ml-analysis-site-binary-feature-importance-v1.0.ipynb: permutation feature importance in binary classification.      
+code/ml-analysis-site-time2event-prediction-v1.0.ipynb: time-to-event prediction tasks.     
+code/ml-analysis-site-time2event-feature-importance-v1.0.ipynb : permutation feature importance in time-to-event predictionn.   
+
 
 ## Settings
 Data collection and analyses were performed in R 4.2.1, Python 3.8.12, NumPy 1.20.2, scikit-learn 0.24.1, and scikit-survival 0.17.2. 
@@ -18,7 +24,7 @@ Please contact gwan@mgh.harvard.edu or ysemenov@mgh.harvard.edu in case you have
 Please cite our paper if you use the code in your own work:       
 
 ```
-@article{earlymelanomawan22,         
+@article{earlymelanoma2022,         
   title={Prediction of Early-Stage Melanoma Recurrence Using Clinical and Histopathologic Features},            
   author={Wan, Guihong       
   and Nguyen, Nga    
