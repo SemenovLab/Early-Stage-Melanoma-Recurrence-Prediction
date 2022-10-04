@@ -16,15 +16,15 @@ Please cite our paper if you use the code in your own work:
 
 '''
 @article{earlymelanomawan22,
-  title={Prediction of Early-Stage Melanoma Recurrence Using Clinical and Histopathologic Features},
-  author={Wan, Guihong
-  and Nguyen, Nga
-  and Liu, Feng
-  and DeSimone, Mia S.
-  and Bonnie W. Leung
-  and others},
-  journal={NPJ Precision Oncology}
-  year="2022"
+  title={Prediction of Early-Stage Melanoma Recurrence Using Clinical and Histopathologic Features},       
+  author={Wan, Guihong     
+  and Nguyen, Nga    
+  and Liu, Feng       
+  and DeSimone, Mia S       
+  and Leung, Bonnie W       
+  and others},      
+  journal={NPJ Precision Oncology},     
+  year="2022"      
 }
 '''
 
