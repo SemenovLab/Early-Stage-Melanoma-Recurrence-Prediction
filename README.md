@@ -10,7 +10,7 @@ data: includes an sample dataset.
 melanoma_example_v1.0.csv: 30 artificial samples created to demonstrate the running of the codes.
 
 
-code: includes all the codes for the analyses.          
+code: includes codes for the analyses.          
 Melanoma_cohort_v1.0.Rmd for data preprocessing.              
 ml-analysis-site-binary-classification-v1.0.ipynb: binary recurrence classification tasks.        
 ml-analysis-site-binary-feature-importance-v1.0.ipynb: permutation feature importance in binary classification.       
