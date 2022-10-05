@@ -6,7 +6,10 @@ Accepted in principle in NPJ Precision Oncology, 2022.
 Research Use Only.
 
 ## Description
-data: includes an sample dataset.       
+data: includes an sample dataset.    
+melanoma_example_v1.0.csv: 30 artificial samples created to demonstrate the running of the codes.
+
+
 code: includes all the codes for the analyses.   
 code/Melanoma_cohort_v1.0.Rmd for data preprocessing.
 code/ml-analysis-site-binary-classification-v1.0.ipynb: binary recurrence classification tasks.     
