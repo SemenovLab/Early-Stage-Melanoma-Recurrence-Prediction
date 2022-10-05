@@ -1,0 +1,326 @@
+---
+title: "Melanoma Cohort"
+author: "Guihong Wan"
+date: "Aug/11/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+root_dir = dirname(rstudioapi::getSourceEditorContext()$path)
+source(paste(root_dir,"/header.R",sep = ""))
+library(e1071)
+
+#install.packages("devtools")
+#devtools::install_github("zabore/ezfun")
+library(ezfun)
+
+```
+
+
+```{r}
+# This file is not shared.
+melanoma_cohort_org <- read.csv("data/melanoma_encoded_all_v1.0.csv") # one-hot encoded
+```
+
+
+# Five-year recurrence free or seven-year recurrence free classification
+```{r}
+threshold = 5
+
+melanoma_cohort <- melanoma_cohort_org %>%
+  dplyr::filter(Recurrence  == 1 | Duration_of_Follow_up >= threshold)
+
+if (threshold == 5){
+  # original data
+  write.csv(melanoma_cohort, "data/melanoma_time_5y.csv", row.names = FALSE)
+  
+  # core complete data
+  melanoma_cohort_tmp <- melanoma_cohort %>%
+    dplyr::filter(newNODE == 0 | newNODE == 4) %>%
+    dplyr::filter(fUlceration != "Unknown") %>%
+    dplyr::filter(fMitoses == "Unknown")
+
+  write.csv(melanoma_cohort_tmp, "data/melanoma_time_5y_core.csv", row.names = FALSE)
+  
+  # complete data
+  melanoma_cohort_tmp <- melanoma_cohort %>%
+    dplyr::filter(newNODE == 0 | newNODE == 4) %>%
+    dplyr::filter(fUlceration != "Unknown") %>%
+    dplyr::filter(is.na(medianincome)) %>%
+    dplyr::filter(fMitoses == "Unknown") %>%
+    dplyr::filter(margincheck_2 != 1) %>%
+    dplyr::filter(fTumorInfiltratingLymphocytes_Unknown != 1) %>%
+    dplyr::filter(fRadialGrowthPhase_Unknown != 1) %>%
+    dplyr::filter(fPrecursortype != "Unknown type") 
+
+  write.csv(melanoma_cohort_tmp, "data/melanoma_time_5y_complete.csv", row.names = FALSE)
+}
+
+if (threshold == 7){
+  write.csv(melanoma_cohort, "data/melanoma_time_7y.csv", row.names = FALSE)
+}
+```
+
+
+# Time to event analysis
+```{r}
+melanoma_cohort <- melanoma_cohort_org %>%
+  dplyr::mutate(Dia2Recur = round(time_length(difftime(RecurDate, DiaDate),'days')/365, 2)) %>%
+  dplyr::mutate(Dia2Recur = case_when(Recurrence==0 ~ Duration_of_Follow_up,
+                                      TRUE ~ Dia2Recur)) %>%
+  dplyr::filter(match == "yes") # 1:3 matched
+
+# original cohorts
+write.csv(melanoma_cohort, "data/melanoma_time2event.csv", row.names = FALSE)
+
+# core complete cohorts
+melanoma_cohort_tmp <- melanoma_cohort %>%
+  dplyr::filter(newNODE == 0 | newNODE == 4) %>%
+  dplyr::filter(fUlceration != "Unknown") %>%
+  dplyr::filter(fMitoses == "Unknown")
+
+write.csv(melanoma_cohort_tmp, "data/melanoma_time2event_core.csv", row.names = FALSE) 
+
+# complete cohorts
+remove <- melanoma_cohort_org_1 %>%
+    dplyr::filter(fMitoses == "Unknown")
+melanoma_cohort_tmp <- melanoma_cohort %>%
+    dplyr::filter(newNODE == 0 | newNODE == 4) %>%
+    dplyr::filter(fUlceration != "Unknown") %>%
+    dplyr::filter(fMitoses == "Unknown") %>%
+    dplyr::filter(is.na(medianincome)) %>%
+    dplyr::filter(margincheck_2 != 1) %>%
+    dplyr::filter(fTumorInfiltratingLymphocytes_Unknown != 1) %>%
+    dplyr::filter(fRadialGrowthPhase_Unknown != 1) %>%
+    dplyr::filter(fPrecursortype != "Unknown type")
+
+write.csv(melanoma_cohort_tmp, "data/melanoma_time2event_complete.csv", row.names = FALSE) 
+```
+
+
+# Simple Analysis
+
+```{r}
+melanoma_cohort_initial <- melanoma_cohort_org %>%
+  dplyr::mutate(Dia2Recur = round(time_length(difftime(RecurDate, DiaDate),'days')/365, 2)) %>%
+  dplyr::mutate(Dia2Recur = case_when(Recurrence==0 ~ Duration_of_Follow_up,
+                                      TRUE ~ Dia2Recur)) %>%
+  dplyr::mutate(recurrencetype = case_when(recurrencetype3 == "No" ~ "Regional",
+                                           recurrencetype3 == "Yes" ~ "Distant",
+                                           TRUE ~ "Non-recurrence"
+                                           )) %>%
+  dplyr::mutate(yearofdiagnosis_group = case_when(yearofdiagnosis <= 2005 ~ "<= 2005",
+                                                  yearofdiagnosis <= 2010 ~ "<= 2010",
+                                                  yearofdiagnosis <= 2015 ~ "<= 2015",
+                                                  yearofdiagnosis <= 2020 ~ "<= 2020",
+                                                  T ~ "new"
+                                                  )) %>%
+  dplyr::mutate(Race = case_when(Race != "White" ~ "Other/Unknown",
+                                 T ~ "White"))
+```
+
+## Table: Baseline charactoristics for the entir cohort
+
+```{r, warning=FALSE}
+summary_df <- melanoma_cohort_initial 
+
+table1(~ Site+
+         Duration_of_Follow_up + Dia2Recur + 
+         recurrencetype  + MortalityStatus + yearofdiagnosis +
+         
+         yearofdiagnosis_group + TrdxAgeAtDx + GenderNm + Race  + Ethnicity + medianincome 
+         + InsuranceType + MaritalStatus + 
+         
+         as.factor(cmhistory) + CCItotal_psuedoMedian +  
+         PNMSC + PSkin_situ_or_benigh + POther_cancer + as.factor(CAID_binary) + as.factor(SAID_binary) +
+         
+         TrdxHistologyDesc + TrdxSiteDesc + fstage + fthickness  + fAnatomicLevel + Laterality + 
+         
+         as.factor(newNODE) + fUlceration + fMitoses + 
+         totalmargins + as.factor(margincheck) +
+
+         fTumorInfiltratingLymphocytes + cTumorInfiltratingLymphocytes + 
+         fRadialGrowthPhase + 
+         fVerticalGrowthPhase + fVerticalGrowthType + 
+         fPrecursorLesion + fPrecursortype  +
+         fMicrosatellites + fRegression + 
+          fLymphovascularInvasion 
+         + fPerineuralInvasion
+         | as.factor(Recurrence), 
+       data=summary_df, overall=F, extra.col=list(`P-value`=pvalue))
+```
+
+
+
+## Histogram for the recurrences
+```{r fuptimes, echo = FALSE}
+df <- melanoma_cohort_initial %>%
+  dplyr::filter(Recurrence == 1) %>%
+  dplyr::mutate(recurrencetype = case_when(grepl('Regional', recurrencetype, ignore.case = TRUE) ~ 1,
+                                           TRUE ~ 0))
+
+ggplot(df, aes(x = Dia2Recur, fill = factor(recurrencetype))) +
+  geom_histogram(bins = 70, alpha = 0.6, position = "stack") +
+  scale_fill_manual(values = c("red", "blue"), labels = c("distant recurrence", "locoregional recurrence")) +
+  ezfun::theme_ezbasic() +
+  labs(x = "Years from diagnosis",
+       y = "Count")
+
+out <- df %>%
+  dplyr::filter(Dia2Recur > 5) %>% # compute the percentage
+  group_by(recurrencetype) %>%
+  tally()
+print(out)
+dim(melanoma_cohort_initial)
+```
+
+
+## Table: Baseline charactoristics for the MGB cohort: controls at least 5 years follow-up
+```{r, warning=FALSE}
+
+summary_df <- melanoma_cohort_initial %>%
+  dplyr::filter(Recurrence == 1 | Duration_of_Follow_up >= 5)  %>%
+  # dplyr::filter(Recurrence == 1 | match == "yes") %>%
+  dplyr::filter(Site == "DFCI")
+
+table1(~ Duration_of_Follow_up + Dia2Recur + 
+         recurrencetype  + MortalityStatus + 
+         
+         yearofdiagnosis_group + TrdxAgeAtDx + GenderNm + Race  + Ethnicity + medianincome 
+         + InsuranceType + MaritalStatus + 
+         
+         as.factor(cmhistory) + CCItotal_psuedoMedian +  
+         PNMSC + PSkin_situ_or_benigh + POther_cancer + as.factor(CAID_binary) + as.factor(SAID_binary) +
+         
+         TrdxHistologyDesc + TrdxSiteDesc + fstage + fthickness  + fAnatomicLevel + Laterality + 
+         
+         as.factor(newNODE) + fUlceration + fMitoses + 
+         totalmargins + as.factor(margincheck) +
+
+         fTumorInfiltratingLymphocytes + cTumorInfiltratingLymphocytes + 
+         fRadialGrowthPhase + 
+         fVerticalGrowthPhase + fVerticalGrowthType + 
+         fPrecursorLesion + fPrecursortype  +
+         fMicrosatellites + fRegression + 
+          fLymphovascularInvasion 
+         + fPerineuralInvasion
+         | as.factor(Recurrence), 
+       data=summary_df, overall=F, extra.col=list(`P-value`=pvalue))
+
+
+summary(summary_df$Duration_of_Follow_up)
+
+out <- melanoma_cohort_initial %>%
+  # dplyr::filter(Recurrence == 1 | Duration_of_Follow_up >= 5)  %>%
+  dplyr::filter(Recurrence == 1 | match == "yes") %>%
+  dplyr::filter(Site == "DFCI") %>%
+  dplyr::filter(Recurrence == 0)
+summary(out$totalmargins)
+
+out <- summary_df %>%
+  dplyr::filter(recurrencetype == "Regional")
+summary(out$Dia2Recur)
+sd(out$Dia2Recur)
+
+out <- summary_df %>%
+  dplyr::filter(recurrencetype == "Distant")
+summary(out$Dia2Recur)
+sd(out$Dia2Recur)
+
+```
+```{r}
+# summary(summary_df$Duration_of_Follow_up)
+
+out <- summary_df %>%
+  dplyr::filter(Recurrence == 1)
+summary(out$fAnatomicLevel)
+
+out <- summary_df %>%
+  dplyr::filter(Recurrence == 0)
+summary(out$fAnatomicLevel)
+```
+
+
+```{r, warning=FALSE}
+summary_df <- melanoma_cohort_initial %>%
+  dplyr::filter(Recurrence == 1 | match == "yes") %>%
+  dplyr::filter(Site == "DFCI")
+
+table1(~ Duration_of_Follow_up + Dia2Recur + 
+         recurrencetype  + MortalityStatus + 
+         
+         yearofdiagnosis_group + TrdxAgeAtDx + GenderNm + Race  + Ethnicity + medianincome 
+         + InsuranceType + MaritalStatus + 
+         
+         as.factor(cmhistory) + CCItotal_psuedoMedian +  
+         PNMSC + PSkin_situ_or_benigh + POther_cancer + as.factor(CAID_binary) + as.factor(SAID_binary) +
+         
+         TrdxHistologyDesc + TrdxSiteDesc + fstage + fthickness  + fAnatomicLevel + Laterality + 
+         
+         as.factor(newNODE) + fUlceration + fMitoses + 
+         totalmargins + as.factor(margincheck) +
+
+         fTumorInfiltratingLymphocytes + cTumorInfiltratingLymphocytes + 
+         fRadialGrowthPhase + 
+         fVerticalGrowthPhase + fVerticalGrowthType + 
+         fPrecursorLesion + fPrecursortype  +
+         fMicrosatellites + fRegression + 
+          fLymphovascularInvasion 
+         + fPerineuralInvasion
+         | as.factor(Recurrence), 
+       data=summary_df, overall=F, extra.col=list(`P-value`=pvalue))
+
+
+summary(summary_df$Duration_of_Follow_up)
+
+out <- melanoma_cohort_initial %>%
+  dplyr::filter(Recurrence == 1 | Duration_of_Follow_up >= 5)  %>%
+  # dplyr::filter(Recurrence == 1 | match == "yes") %>%
+  dplyr::filter(Site == "DFCI") %>%
+  dplyr::filter(Recurrence == 0)
+summary(out$TrdxAgeAtDx)
+
+out <- summary_df %>%
+  dplyr::filter(recurrencetype == "Regional")
+summary(out$Dia2Recur)
+sd(out$Dia2Recur)
+
+out <- summary_df %>%
+  dplyr::filter(recurrencetype == "Distant")
+summary(out$Dia2Recur)
+sd(out$Dia2Recur)
+
+```
+
+
+# Kaplan-Meier Survival Curve
+```{r}
+summary_df <- melanoma_cohort_initial %>%
+  dplyr::filter(Site == "MGB")  %>%
+  # dplyr::filter(Site == "DFCI")  %>%
+  # dplyr::filter(Recurrence == 1 | match == "yes") %>%
+  dplyr::mutate(MortalityStatus_ind = case_when(MortalityStatus == "Alive" ~ 0,
+                                                TRUE ~ 1)) %>%
+  distinct()
+
+
+surv_fit <- survfit(Surv(Duration_of_Follow_up, MortalityStatus_ind) ~ Recurrence, 
+                      data = summary_df)
+
+ggsurvplot(surv_fit, 
+           pval = TRUE, conf.int=TRUE,
+           #surv.median.line = "hv",
+           risk.table = TRUE, risk.table.height = 0.2, 
+           legend.labs = c("Non-recurrence", "Recurrence"),
+           palette = c("#2E9FDF", "#E7B800"),
+           xlab = "Duration of follow-up (year)",
+           tables.theme = theme_cleantable(),
+           ggtheme = theme_bw()
+           )
+```
+
+
+
+
