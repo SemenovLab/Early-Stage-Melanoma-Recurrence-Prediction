@@ -14,8 +14,7 @@ code: includes all the codes for the analyses.
 Melanoma_cohort_v1.0.Rmd for data preprocessing.              
 ml-analysis-site-binary-classification-v1.0.ipynb: binary recurrence classification tasks.        
 ml-analysis-site-binary-feature-importance-v1.0.ipynb: permutation feature importance in binary classification.       
-ml-analysis-site-time2event-prediction-v1.0.ipynb: time-to-event prediction tasks.      
-ml-analysis-site-time2event-feature-importance-v1.0.ipynb : permutation feature importance in time-to-event predictionn.    
+ml-analysis-site-time2event-prediction-v1.0.ipynb: time-to-event prediction, permutation feature importance, and sample predictions.  
 
 
 ## Settings
